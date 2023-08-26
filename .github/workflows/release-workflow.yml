@@ -79,7 +79,7 @@ jobs:
 
       - name: Bump operator version in CRD
         run: |
-          sed -i "s/k8s-mediaserver-operator:${{ previous_tag || env.DEFAULT_RELEASE_VERSION }}/k8s-mediaserver-operator:${{ release_tag || env.DEFAULT_RELEASE_VERSION }}/g" k8s-mediaserver-operator.yml k8s-mediaserver-operator-arm64.yml
+          sed -i "s/k8s-mediaserver-operator:${{ steps.versioning.outputs.previous_tag || env.DEFAULT_RELEASE_VERSION }}/k8s-mediaserver-operator:${{ steps.versioning.outputs.release_tag || env.DEFAULT_RELEASE_VERSION }}/g" k8s-mediaserver-operator.yml k8s-mediaserver-operator-arm64.yml
 
       - name: Commit files
         run: |
