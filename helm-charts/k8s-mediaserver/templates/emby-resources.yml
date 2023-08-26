@@ -1,0 +1,204 @@
+{{ if .Values.emby.enabled }}
+---
+### CONFIGMAP
+## INIT-CONTAINER
+---
+apiVersion: v1
+data:
+  config.xml: |
+    <Config>
+      <UrlBase>{{ .Values.emby.ingress.path }}</UrlBase>
+    </Config>
+  init-emby.sh: |
+    #!/bin/bash
+    echo "### Initializing config ###"
+    if [ ! -f /emby-config/config.xml ]; then
+      cp -n /init-emby/config.xml /emby-config/config.xml
+      echo "### No configuration found, intialized with default settings ###"
+    fi
+kind: ConfigMap
+metadata:
+  name: init-emby-cm
+---
+## APPLICATION
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: emby-config
+data:
+  PGID: "{{ .Values.general.pgid }}"
+  PUID: "{{ .Values.general.puid }}"
+---
+### DEPLOYMENT
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emby
+  labels:
+    {{- include "k8s-mediaserver.labels" . | nindent 4 }}
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "k8s-mediaserver.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "k8s-mediaserver.selectorLabels" . | nindent 8 }}
+        app: emby
+    spec:
+      initContainers:
+        - name: config-emby
+          image: docker.io/ubuntu:groovy
+          command: ["/init-emby/init-emby.sh"]
+          volumeMounts:
+            - mountPath: /init-emby
+              name: init-files-emby
+          {{- if .Values.emby.volume }}
+            - name: {{ .Values.emby.volume.name }}
+              mountPath: /emby-config
+          {{- else }}
+            - name: mediaserver-volume
+              mountPath: /emby-config
+              subPath: "{{ .Values.general.storage.subPaths.config }}/emby"
+          {{- end }}
+          securityContext:
+            runAsUser: {{ .Values.general.puid }}
+            runAsGroup: {{ .Values.general.pgid }}
+      containers:
+        - name: {{ .Chart.Name }}
+          envFrom:
+            - configMapRef:
+                name: emby-config
+          image: "{{ .Values.emby.container.image }}:{{ .Values.emby.container.tag | default .Values.general.image_tag }}"
+          imagePullPolicy: Always
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.emby.container.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          ports:
+            - name: emby-port
+              containerPort: {{ .Values.emby.container.port }}
+              protocol: TCP
+          volumeMounts:
+          {{- if .Values.emby.volume }}
+            - name: {{ .Values.emby.volume.name }}
+              mountPath: /config
+          {{- else }}
+            - name: mediaserver-volume
+              mountPath: "/config"
+              subPath: "{{ .Values.general.storage.subPaths.config }}/emby"
+          {{- end }}
+            - name: mediaserver-volume
+              mountPath: "/downloads"
+              subPath: "{{ .Values.general.storage.subPaths.downloads }}"
+            - name: mediaserver-volume
+              mountPath: "/movies"
+              subPath: "{{ .Values.general.storage.subPaths.movies }}"
+            - name: mediaserver-volume
+              mountPath: "/tv"
+              subPath: "{{ .Values.general.storage.subPaths.tv }}"
+          {{- with .Values.emby.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        {{- if not .Values.general.storage.customVolume }}
+        - name: mediaserver-volume
+          persistentVolumeClaim:
+            claimName: {{ .Values.general.storage.pvcName }}
+        {{- else }}
+        - name: mediaserver-volume
+          {{- toYaml .Values.general.storage.volumes | nindent 10 }}
+        {{- end }}
+        {{- if .Values.emby.volume }}
+        - name: {{ .Values.emby.volume.name }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.emby.volume.name }}
+        {{- end }}
+        - name: init-files-emby
+          configMap:
+            defaultMode: 493
+            name: init-emby-cm
+      {{- with .Values.general.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+### SERVICES
+apiVersion: v1
+kind: Service
+metadata:
+  name: emby
+  labels:
+    {{- include "k8s-mediaserver.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.emby.service.type }}
+  ports:
+    - port: {{ .Values.emby.service.port }}
+      targetPort: {{ .Values.emby.container.port }}
+      protocol: TCP
+{{ if eq .Values.emby.service.type "NodePort" }}
+      nodePort: {{ .Values.emby.service.nodePort }}
+{{ end }}
+      name: emby-port
+  selector:
+    app: emby
+
+---
+{{ if .Values.emby.service.extraLBService }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: emby-lb
+  annotations:
+    {{- include .Values.emby.service.extraLBService.annotations . | nindent 4 }}
+  labels:
+    {{- include "k8s-mediaserver.labels" . | nindent 4 }}
+spec:
+  type: LoadBalancer
+  ports:
+    - port: {{ .Values.emby.service.port }}
+      targetPort: {{ .Values.emby.container.port }}
+      protocol: TCP
+      name: emby-port
+  selector:
+    app: emby
+{{ end }}
+---
+### INGRESS ###
+{{ if .Values.emby.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: emby
+  labels:
+    {{- include "k8s-mediaserver.labels" . | nindent 4 }}
+  {{- with .Values.emby.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+{{- if .Values.emby.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ .Values.general.ingress_host | quote }}
+      secretName: {{ .Values.emby.ingress.tls.secretName }}
+{{ end }}
+  ingressClassName: {{ .Values.general.ingress.ingressClassName }}
+  rules:
+    - host: {{ .Values.general.ingress_host | quote }}
+      http:
+        paths:
+          - path: {{ .Values.emby.ingress.path }}
+            pathType: Prefix
+            backend:
+              service:
+                name: emby
+                port:
+                  number: {{ .Values.emby.service.port }}
+{{ end }}
+{{ end }}

@@ -21,6 +21,7 @@ general:
     subPaths:
       tv: media/tv
       movies: media/movies
+      music: media/music
       downloads: downloads
       transmission: transmission
       sabnzbd: sabnzbd
@@ -61,6 +62,37 @@ sonarr:
     #accessModes: ReadWriteOnce
     #storage: 5Gi
     #selector: {}
+
+lidarr:
+  enabled: true
+  container:
+    image: docker.io/linuxserver/lidarr
+    nodeSelector: {}
+    port: 8686
+  service:
+    type: ClusterIP
+    port: 8686
+    nodePort:
+    extraLBService: false
+    # Defines an additional LB service, requires cloud provider service or MetalLB
+  ingress:
+    enabled: true
+    annotations: {}
+    path: /lidarr
+    tls:
+      enabled: false
+      secretName: ""
+  resources: {}
+  volume: {}
+    #name: pvc-sonarr-config
+    #storageClassName: longhorn
+    #annotations:
+    #  my-annotation/test: my-value
+    #labels:
+    #  my-label/test: my-other-value
+    #accessModes: ReadWriteOnce
+    #storage: 5Gi
+  #selector: {}
 
 radarr:
   enabled: true
@@ -266,3 +298,94 @@ plex:
   #  accessModes: ReadWriteOnce
   #  storage: 5Gi
   #  selector: {}
+
+bazarr:
+  enabled: true
+  container:
+    image: docker.io/linuxserver/bazarr
+    nodeSelector: {}
+    port: 6767
+  service:
+    type: ClusterIP
+    port: 6767
+    nodePort:
+    extraLBService: false
+    # Defines an additional LB service, requires cloud provider service or MetalLB
+  ingress:
+    enabled: true
+    annotations: {}
+    path: /bazarr
+    tls:
+      enabled: false
+      secretName: ""
+  resources: {}
+  volume: {}
+    #name: pvc-bazarr-config
+    #storageClassName: longhorn
+    #annotations: {}
+    #labels: {}
+    #accessModes: ReadWriteOnce
+    #storage: 5Gi
+  #selector: {}
+
+
+jellyfin:
+  enabled: true
+  container:
+    image: docker.io/linuxserver/jellyfin
+    nodeSelector: {}
+    port: 8096
+  service:
+    type: ClusterIP
+    port: 8096
+    nodePort:
+    extraLBService: false
+    # Defines an additional LB service, requires cloud provider service or MetalLB
+  ingress:
+    enabled: true
+    annotations: {}
+    path: /jellyfin
+    tls:
+      enabled: false
+      secretName: ""
+  resources: {}
+  volume: {}
+    #name: pvc-jellyfin-config
+    #storageClassName: longhorn
+    #annotations: {}
+    #labels: {}
+    #accessModes: ReadWriteOnce
+    #storage: 5Gi
+  #selector: {}
+
+
+emby:
+  enabled: true
+  container:
+    image: docker.io/linuxserver/emby
+    nodeSelector: {}
+    port: 8096
+  service:
+    type: ClusterIP
+    port: 8096
+    nodePort:
+    extraLBService: false
+    # Defines an additional LB service, requires cloud provider service or MetalLB
+  ingress:
+    enabled: true
+    annotations: {}
+    path: /emby
+    tls:
+      enabled: false
+      secretName: ""
+  resources: {}
+  volume: {}
+    #name: pvc-emby-config
+    #storageClassName: longhorn
+    #annotations: {}
+    #labels: {}
+    #accessModes: ReadWriteOnce
+  #storage: 5Gi
+  #selector: {}
+
+
