@@ -12,8 +12,8 @@ jobs:
     name: Check and manage versioning
     runs-on: tduarte #ubuntu-latest
     outputs:
-      release_tag: "1.0.0" #${{ steps.bump-version.outputs.new_tag || steps.bump-version.outputs.previous_tag }}
-      previous_tag: "1.0.0" #${{ steps.bump-version.outputs.previous_tag }}
+      release_tag: ${{ steps.bump-version.outputs.new_tag || steps.bump-version.outputs.previous_tag || "1.0.0" }}
+      previous_tag: ${{ steps.bump-version.outputs.previous_tag || "1.0.0" }}
 
     steps:
     - uses: actions/checkout@v3
@@ -75,7 +75,7 @@ jobs:
 
       - name: Bump operator version in CRD
         run: |
-          sed -i "s/k8s-mediaserver-operator:${{ previous_tag }}/k8s-mediaserver-operator:${{ release_tag }}/g" k8s-mediaserver-operator.yml k8s-mediaserver-operator-arm64.yml
+          sed -i "s/k8s-mediaserver-operator:${{ previous_tag || "1.0.0" }}/k8s-mediaserver-operator:${{ release_tag || "1.0.0" }}/g" k8s-mediaserver-operator.yml k8s-mediaserver-operator-arm64.yml
 
       - name: Commit files
         run: |
