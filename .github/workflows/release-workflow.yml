@@ -11,23 +11,25 @@ on:
       - 'helm-charts/k8s-mediaserver/**'
       - 'Dockerfile'
       - 'Dockerfile-ARM64'
+  workflow_dispatch:
+
 jobs:
   versioning:
     name: Check and manage versioning
     runs-on: tduarte #ubuntu-latest
     outputs:
-      release_tag: ${{ steps.bump-version.outputs.new_tag || steps.bump-version.outputs.previous_tag || env.DEFAULT_RELEASE_VERSION }}
+      release_tag: ${{ steps.bump-version.outputs.new_tag || env.DEFAULT_RELEASE_VERSION }}
       previous_tag: ${{ steps.bump-version.outputs.previous_tag || env.DEFAULT_RELEASE_VERSION }}
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Bump version and push tag
-      uses: mathieudutour/github-tag-action@v6.1
-      id: bump-version
-      with:
-        github_token: ${{ secrets.GH_TOKEN }}
-        default_bump: false
+      - name: Bump version and push tag
+        uses: mathieudutour/github-tag-action@v6.1
+        id: bump-version
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
+          default_bump: false
 
   build_image:
     needs: versioning
