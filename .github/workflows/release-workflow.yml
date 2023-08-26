@@ -10,7 +10,7 @@ on:
 jobs:
   versioning:
     name: Check and manage versioning
-    runs-on: ubuntu-latest
+    runs-on: tduarte #ubuntu-latest
     outputs:
       release_tag: ${{ steps.bump-version.outputs.new_tag || steps.bump-version.outputs.previous_tag }}
       previous_tag: ${{ steps.bump-version.outputs.previous_tag }}
@@ -28,7 +28,7 @@ jobs:
   build_image:
     needs: versioning
     name: Build and push container images
-    runs-on: ubuntu-latest
+    runs-on: tduarte #ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
