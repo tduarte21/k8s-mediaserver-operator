@@ -50,13 +50,6 @@ jobs:
           sudo apt-get install -y buildah fuse-overlayfs podman
           sudo sed -i 's/^\[machine\]$/#\[machine\]/' /usr/share/containers/containers.conf
 
-      - name: Log in
-        uses: redhat-actions/podman-login@v1
-        with:
-          registry: ${{ secrets.DOCKER_PUSH_REPO }}
-          username: ${{ secrets.DOCKER_PUSH_USERNAME }}
-          password: ${{ secrets.DOCKER_PUSH_TOKEN }}
-
       - name: Build Image - x86_64
         id: build-image-x86_64
         uses: redhat-actions/buildah-build@v2
@@ -74,6 +67,13 @@ jobs:
 #          tags: latest-arm64 ${{ needs.versioning.outputs.release_tag }}-arm64
 #          containerfiles: |
 #            ./Dockerfile-ARM64
+
+      - name: Log in
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: ${{ steps.build-image-x86_64.outputs.image }}
+          username: ${{ secrets.DOCKER_PUSH_USERNAME }}
+          password: ${{ secrets.DOCKER_PUSH_TOKEN }}
 
       - name: Push
         id: push-x86
