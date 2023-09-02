@@ -79,7 +79,7 @@ jobs:
         id: push-x86
         uses: redhat-actions/push-to-registry@v2
         with:
-          image: ${{ steps.build-image-x86_64.outputs.image }}
+          image: ${{ secrets.DOCKER_PUSH_IMAGE }}
           tags: latest ${{ needs.versioning.outputs.release_tag }}
           registry: ${{ secrets.DOCKER_PUSH_REPO }}
           username: ${{ secrets.DOCKER_PUSH_USERNAME }}
