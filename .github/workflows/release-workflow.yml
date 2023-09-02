@@ -39,6 +39,13 @@ jobs:
 #    steps:
 #      - uses: actions/checkout@v3
 
+      - name: Log in
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: ${{ secrets.DOCKER_PUSH_REPO }}
+          username: ${{ secrets.DOCKER_PUSH_USERNAME }}
+          password: ${{ secrets.DOCKER_PUSH_TOKEN }}
+
       - name: install buildah
         run: |
           . /etc/lsb-release && \
@@ -68,7 +75,7 @@ jobs:
 #          containerfiles: |
 #            ./Dockerfile-ARM64
 
-      - name: Push To quay.io
+      - name: Push
         id: push-x86
         uses: redhat-actions/push-to-registry@v2
         with:
