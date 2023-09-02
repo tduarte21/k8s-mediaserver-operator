@@ -8,6 +8,7 @@ on:
     branches:
       - master
     paths:
+      - '.github/workflows/**'
       - 'helm-charts/k8s-mediaserver/**'
       - 'Dockerfile'
       - 'Dockerfile-ARM64'
