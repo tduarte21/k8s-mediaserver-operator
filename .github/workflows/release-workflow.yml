@@ -71,7 +71,7 @@ jobs:
       - name: Log in
         uses: redhat-actions/podman-login@v1
         with:
-          registry: ${{ secrets.DOCKER_PUSH_IMAGE }}
+          registry: ${{ vars.DOCKER_PUSH_IMAGE }}
           username: ${{ secrets.DOCKER_PUSH_USERNAME }}
           password: ${{ secrets.DOCKER_PUSH_TOKEN }}
 
@@ -79,9 +79,9 @@ jobs:
         id: push-x86
         uses: redhat-actions/push-to-registry@v2
         with:
-          image: ${{ secrets.DOCKER_PUSH_IMAGE }}
+          image: ${{ vars.DOCKER_PUSH_IMAGE }}
           tags: latest ${{ needs.versioning.outputs.release_tag }}
-          registry: ${{ secrets.DOCKER_PUSH_REPO }}
+          registry: ${{ vars.DOCKER_PUSH_REPO }}
           username: ${{ secrets.DOCKER_PUSH_USERNAME }}
           password: ${{ secrets.DOCKER_PUSH_TOKEN }}
 
@@ -89,9 +89,9 @@ jobs:
 #        id: push-arm64
 #        uses: redhat-actions/push-to-registry@v2
 #        with:
-#          image: ${{ steps.build-image-arm64.outputs.image }}
+#          image: ${{ vars.DOCKER_PUSH_IMAGE }}
 #          tags: latest-arm64 ${{ needs.versioning.outputs.release_tag }}-arm64
-#          registry: ${{ secrets.DOCKER_PUSH_REPO }}
+#          registry: ${{ vars.DOCKER_PUSH_REPO }}
 #          username: ${{ secrets.DOCKER_PUSH_USERNAME }}
 #          password: ${{ secrets.DOCKER_PUSH_TOKEN }}
 
