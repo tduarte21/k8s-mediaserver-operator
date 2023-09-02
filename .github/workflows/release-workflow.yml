@@ -39,8 +39,9 @@ jobs:
 #    steps:
 #      - uses: actions/checkout@v3
 
-      - name: Install buildah and podman
+      - name: Configure and install dependencies
         run: |
+          mkdir /home/runner/.docker
           . /etc/lsb-release && \
           sudo apt-get update && \
           sudo apt-get install -y gnupg2 && \
