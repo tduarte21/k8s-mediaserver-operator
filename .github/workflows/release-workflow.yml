@@ -39,14 +39,7 @@ jobs:
 #    steps:
 #      - uses: actions/checkout@v3
 
-      - name: Log in
-        uses: redhat-actions/podman-login@v1
-        with:
-          registry: ${{ secrets.DOCKER_PUSH_REPO }}
-          username: ${{ secrets.DOCKER_PUSH_USERNAME }}
-          password: ${{ secrets.DOCKER_PUSH_TOKEN }}
-
-      - name: install buildah
+      - name: Install buildah and podman
         run: |
           . /etc/lsb-release && \
           sudo apt-get update && \
@@ -54,8 +47,15 @@ jobs:
           echo "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${DISTRIB_RELEASE}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && \
           curl -fsL "https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${DISTRIB_RELEASE}/Release.key" | sudo apt-key add - && \
           sudo apt-get update && \
-          sudo apt-get install -y buildah fuse-overlayfs
+          sudo apt-get install -y buildah fuse-overlayfs podman
           sudo sed -i 's/^\[machine\]$/#\[machine\]/' /usr/share/containers/containers.conf
+
+      - name: Log in
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: ${{ secrets.DOCKER_PUSH_REPO }}
+          username: ${{ secrets.DOCKER_PUSH_USERNAME }}
+          password: ${{ secrets.DOCKER_PUSH_TOKEN }}
 
       - name: Build Image - x86_64
         id: build-image-x86_64
