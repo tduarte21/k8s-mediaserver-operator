@@ -25,40 +25,49 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Bump version and push tag
-        uses: mathieudutour/github-tag-action@v6.1
-        id: bump-version
+#      - name: Bump version and push tag
+#        uses: mathieudutour/github-tag-action@v6.1
+#        id: bump-version
+#        with:
+#          github_token: ${{ secrets.GH_TOKEN }}
+#          default_bump: false
+
+#      - name: Configure and install dependencies
+#        run: |
+#          mkdir /home/runner/.docker && echo "{}" > /home/runner/.docker/config.json
+#          . /etc/lsb-release && \
+#          sudo apt-get update && \
+#          sudo apt-get install -y gnupg2 && \
+#          echo "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${DISTRIB_RELEASE}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && \
+#          curl -fsL "https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${DISTRIB_RELEASE}/Release.key" | sudo apt-key add - && \
+#          sudo apt-get update && \
+#          sudo apt-get install -y buildah fuse-overlayfs podman
+#          sudo sed -i 's/^\[machine\]$/#\[machine\]/' /usr/share/containers/containers.conf
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Docker Login
+        uses: docker/login-action@v2
         with:
-          github_token: ${{ secrets.GH_TOKEN }}
-          default_bump: false
+          username: ${{ secrets.DOCKER_PUSH_USERNAME }}
+          password: ${{ secrets.DOCKER_PUSH_TOKEN }}
 
-#  build_image:
-#    needs: versioning
-#    name: Build and push container images
-#    runs-on: tduarte #ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v3
-
-      - name: Configure and install dependencies
-        run: |
-          mkdir /home/runner/.docker && echo "{}" > /home/runner/.docker/config.json
-          . /etc/lsb-release && \
-          sudo apt-get update && \
-          sudo apt-get install -y gnupg2 && \
-          echo "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${DISTRIB_RELEASE}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && \
-          curl -fsL "https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${DISTRIB_RELEASE}/Release.key" | sudo apt-key add - && \
-          sudo apt-get update && \
-          sudo apt-get install -y buildah fuse-overlayfs podman
-          sudo sed -i 's/^\[machine\]$/#\[machine\]/' /usr/share/containers/containers.conf
-
-      - name: Build Image - x86_64
-        id: build-image-x86_64
-        uses: redhat-actions/buildah-build@v2
+      - name: Docker Build and Push
+        uses: docker/build-push-action@v4
         with:
-          image: ${{ vars.DOCKER_PUSH_REPO }}/${{ vars.DOCKER_PUSH_IMAGE }}
-          tags: latest ${{ needs.versioning.outputs.release_tag }}
-          containerfiles: |
-            ./Dockerfile
+          push: true
+          tags: ${{ vars.DOCKER_PUSH_REPO }}/${{ vars.DOCKER_PUSH_IMAGE }}:latest
+          context: .
+
+#      - name: Build Image - x86_64
+#        id: build-image-x86_64
+#        uses: redhat-actions/buildah-build@v2
+#        with:
+#          image: ${{ vars.DOCKER_PUSH_REPO }}/${{ vars.DOCKER_PUSH_IMAGE }}
+#          tags: latest ${{ needs.versioning.outputs.release_tag }}
+#          containerfiles: |
+#            ./Dockerfile
 
 #      - name: Build Image - ARM64
 #        id: build-image-arm64
@@ -69,21 +78,15 @@ jobs:
 #          containerfiles: |
 #            ./Dockerfile-ARM64
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_PUSH_USERNAME }}
-          password: ${{ secrets.DOCKER_PUSH_TOKEN }}
-
-      - name: Push
-        id: push-x86
-        uses: redhat-actions/push-to-registry@v2
-        with:
-          image: ${{ vars.DOCKER_PUSH_IMAGE }}
-          tags: latest ${{ needs.versioning.outputs.release_tag }}
-          registry: ${{ vars.DOCKER_PUSH_REPO }}
-          username: ${{ secrets.DOCKER_PUSH_USERNAME }}
-          password: ${{ secrets.DOCKER_PUSH_TOKEN }}
+#      - name: Push
+#        id: push-x86
+#        uses: redhat-actions/push-to-registry@v2
+#        with:
+#          image: ${{ vars.DOCKER_PUSH_IMAGE }}
+#          tags: latest ${{ needs.versioning.outputs.release_tag }}
+#          registry: ${{ vars.DOCKER_PUSH_REPO }}
+#          username: ${{ secrets.DOCKER_PUSH_USERNAME }}
+#          password: ${{ secrets.DOCKER_PUSH_TOKEN }}
 
 #      - name: Push
 #        id: push-arm64
