@@ -71,7 +71,7 @@ jobs:
       - name: Log in
         uses: redhat-actions/podman-login@v1
         with:
-          registry: ${{ steps.push-x86.outputs.registry-paths }}
+          registry: ${{ secrets.DOCKER_PUSH_IMAGE }}
           username: ${{ secrets.DOCKER_PUSH_USERNAME }}
           password: ${{ secrets.DOCKER_PUSH_TOKEN }}
 
