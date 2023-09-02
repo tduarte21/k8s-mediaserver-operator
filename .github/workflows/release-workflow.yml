@@ -16,7 +16,7 @@ on:
 
 jobs:
   release:
-    name: Check and manage versioning
+    name: Release
     runs-on: tduarte #ubuntu-latest
     outputs:
       release_tag: ${{ steps.bump-version.outputs.new_tag || env.DEFAULT_RELEASE_VERSION }}
@@ -52,7 +52,7 @@ jobs:
 
       - name: Build Image - x86_64
         id: build-image-x86_64
-        uses: redhat-actions/buildah-build@v2.12
+        uses: redhat-actions/buildah-build@v2
         with:
           image: k8s-mediaserver-operator
           tags: latest ${{ needs.versioning.outputs.release_tag }}
