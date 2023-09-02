@@ -55,7 +55,7 @@ jobs:
         id: build-image-x86_64
         uses: redhat-actions/buildah-build@v2
         with:
-          image: k8s-mediaserver-operator
+          image: ${{ vars.DOCKER_PUSH_REPO }}/${{ vars.DOCKER_PUSH_IMAGE }}
           tags: latest ${{ needs.versioning.outputs.release_tag }}
           containerfiles: |
             ./Dockerfile
