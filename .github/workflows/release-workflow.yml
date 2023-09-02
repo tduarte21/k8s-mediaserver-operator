@@ -39,23 +39,34 @@ jobs:
 #    steps:
 #      - uses: actions/checkout@v3
 
+#      - name: install buildah
+#        run: |
+#          . /etc/lsb-release && \
+#          sudo apt-get update && \
+#          sudo apt-get install -y gnupg2 && \
+#          echo "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${DISTRIB_RELEASE}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && \
+#          curl -fsL "https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${DISTRIB_RELEASE}/Release.key" | sudo apt-key add - && \
+#          sudo apt-get update && \
+#          sudo apt-get install -y buildah fuse-overlayfs
+#          sudo sed -i 's/^\[machine\]$/#\[machine\]/' /usr/share/containers/containers.conf
+
       - name: Build Image - x86_64
         id: build-image-x86_64
-        uses: redhat-actions/buildah-build@v2
+        uses: redhat-actions/buildah-build@v2.12
         with:
           image: k8s-mediaserver-operator
           tags: latest ${{ needs.versioning.outputs.release_tag }}
           containerfiles: |
             ./Dockerfile
 
-      - name: Build Image - ARM64
-        id: build-image-arm64
-        uses: redhat-actions/buildah-build@v2
-        with:
-          image: k8s-mediaserver-operator
-          tags: latest-arm64 ${{ needs.versioning.outputs.release_tag }}-arm64
-          containerfiles: |
-            ./Dockerfile-ARM64
+#      - name: Build Image - ARM64
+#        id: build-image-arm64
+#        uses: redhat-actions/buildah-build@v2
+#        with:
+#          image: k8s-mediaserver-operator
+#          tags: latest-arm64 ${{ needs.versioning.outputs.release_tag }}-arm64
+#          containerfiles: |
+#            ./Dockerfile-ARM64
 
       - name: Push To quay.io
         id: push-x86
@@ -67,15 +78,15 @@ jobs:
           username: ${{ secrets.DOCKER_PUSH_USERNAME }}
           password: ${{ secrets.DOCKER_PUSH_TOKEN }}
 
-      - name: Push
-        id: push-arm64
-        uses: redhat-actions/push-to-registry@v2
-        with:
-          image: ${{ steps.build-image-arm64.outputs.image }}
-          tags: latest-arm64 ${{ needs.versioning.outputs.release_tag }}-arm64
-          registry: ${{ secrets.DOCKER_PUSH_REPO }}
-          username: ${{ secrets.DOCKER_PUSH_USERNAME }}
-          password: ${{ secrets.DOCKER_PUSH_TOKEN }}
+#      - name: Push
+#        id: push-arm64
+#        uses: redhat-actions/push-to-registry@v2
+#        with:
+#          image: ${{ steps.build-image-arm64.outputs.image }}
+#          tags: latest-arm64 ${{ needs.versioning.outputs.release_tag }}-arm64
+#          registry: ${{ secrets.DOCKER_PUSH_REPO }}
+#          username: ${{ secrets.DOCKER_PUSH_USERNAME }}
+#          password: ${{ secrets.DOCKER_PUSH_TOKEN }}
 
       - name: Print image url
         run: echo "Images pushed to ${{ steps.push-x86.outputs.registry-paths }} and ${{ steps.push-arm64.outputs.registry-paths }}"
