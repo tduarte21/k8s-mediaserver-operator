@@ -65,6 +65,7 @@ jobs:
 
       - name: Load images into KinD nodes
         run: |
+          docker pull ${{ env.IMAGE_TAG_DEV }}
           kind load docker-image ${{ env.IMAGE_TAG_DEV }}
 
       - name: Deploy ingress to newly created cluster
