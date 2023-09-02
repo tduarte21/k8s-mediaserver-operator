@@ -39,16 +39,16 @@ jobs:
 #    steps:
 #      - uses: actions/checkout@v3
 
-#      - name: install buildah
-#        run: |
-#          . /etc/lsb-release && \
-#          sudo apt-get update && \
-#          sudo apt-get install -y gnupg2 && \
-#          echo "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${DISTRIB_RELEASE}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && \
-#          curl -fsL "https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${DISTRIB_RELEASE}/Release.key" | sudo apt-key add - && \
-#          sudo apt-get update && \
-#          sudo apt-get install -y buildah fuse-overlayfs
-#          sudo sed -i 's/^\[machine\]$/#\[machine\]/' /usr/share/containers/containers.conf
+      - name: install buildah
+        run: |
+          . /etc/lsb-release && \
+          sudo apt-get update && \
+          sudo apt-get install -y gnupg2 && \
+          echo "deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${DISTRIB_RELEASE}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list && \
+          curl -fsL "https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable/xUbuntu_${DISTRIB_RELEASE}/Release.key" | sudo apt-key add - && \
+          sudo apt-get update && \
+          sudo apt-get install -y buildah fuse-overlayfs
+          sudo sed -i 's/^\[machine\]$/#\[machine\]/' /usr/share/containers/containers.conf
 
       - name: Build Image - x86_64
         id: build-image-x86_64
