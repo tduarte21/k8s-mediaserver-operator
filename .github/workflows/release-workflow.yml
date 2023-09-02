@@ -21,7 +21,7 @@ jobs:
       ingress_host: k8s-mediaserver.k8s.test
       plex_ingress_host: k8s-plex.k8s.test
       IMAGE_TAG: ${{ vars.DOCKER_PUSH_REPO }}/${{ vars.DOCKER_PUSH_IMAGE }}:latest
-
+      IMAGE_TAG_DEV: ${{ vars.DOCKER_PUSH_REPO }}/${{ vars.DOCKER_PUSH_IMAGE }}:dev #${{ github.sha }}
     steps:
       - uses: actions/checkout@v3
 
@@ -40,7 +40,8 @@ jobs:
       - name: Docker Build and Push
         uses: docker/build-push-action@v4
         with:
-          tags: ${{ env.IMAGE_TAG }}
+          push: true
+          tags: ${{ env.IMAGE_TAG_DEV }}
           context: .
 
       - name: Fetch newer version of CRD
@@ -48,7 +49,7 @@ jobs:
           cp k8s-mediaserver.yml k8s-mediaserver-operator.yml tests/
           sed -i 's/accessMode: ""/accessMode: ReadWriteOnce/g' tests/k8s-mediaserver.yml
           sed -i 's/pvcStorageClass: ""/pvcStorageClass: standard/g' tests/k8s-mediaserver.yml
-          sed 's|quay.io\/kubealex.*|${{ env.IMAGE_TAG }}|g' tests/k8s-mediaserver-operator.yml
+          sed 's|quay.io\/kubealex.*|${{ env.IMAGE_TAG_DEV }}|g' tests/k8s-mediaserver-operator.yml
 
       - name: Kind Cluster
         uses: helm/kind-action@v1.4.0
@@ -58,7 +59,7 @@ jobs:
 
       - name: Load images into KinD nodes
         run: |
-          kind load docker-image ${{ env.IMAGE_TAG }}
+          kind load docker-image ${{ env.IMAGE_TAG_DEV }}
 
       - name: Deploy ingress to newly created cluster
         run: |
