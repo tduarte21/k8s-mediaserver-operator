@@ -89,18 +89,21 @@ spec:
               mountPath: /config
           {{- else }}
             - name: mediaserver-volume
-              mountPath: "/config"
+              mountPath: /config
               subPath: "{{ .Values.general.storage.subPaths.config }}/emby"
           {{- end }}
             - name: mediaserver-volume
               mountPath: "/downloads"
               subPath: "{{ .Values.general.storage.subPaths.downloads }}"
             - name: mediaserver-volume
-              mountPath: "/movies"
+              mountPath: /movies
               subPath: "{{ .Values.general.storage.subPaths.movies }}"
             - name: mediaserver-volume
-              mountPath: "/tv"
+              mountPath: /tv
               subPath: "{{ .Values.general.storage.subPaths.tv }}"
+            - name: mediaserver-volume
+              mountPath: /music
+              subPath: "{{ .Values.general.storage.subPaths.music }}"
           {{- with .Values.emby.resources }}
           resources:
             {{- toYaml . | nindent 12 }}

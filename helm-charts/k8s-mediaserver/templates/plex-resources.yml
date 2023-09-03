@@ -68,6 +68,9 @@ spec:
               subPath: "{{ .Values.general.storage.subPaths.config }}/plex"
           {{- end }}
             - name: mediaserver-volume
+              mountPath: "/downloads"
+              subPath: "{{ .Values.general.storage.subPaths.downloads }}"
+            - name: mediaserver-volume
               mountPath: /movies
               subPath: "{{ .Values.general.storage.subPaths.movies }}"
             - name: mediaserver-volume
@@ -85,7 +88,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 ---
-### SERVICE
+### SERVICES
 apiVersion: v1
 kind: Service
 metadata:
@@ -126,7 +129,7 @@ spec:
     app: plex
 {{ end }}
 ---
-### INGRESS
+### INGRESS ###
 {{ if .Values.plex.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
