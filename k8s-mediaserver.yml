@@ -347,6 +347,41 @@ spec:
     #  storage: 5Gi
     #  selector: {}
 
+  emby:
+    enabled: true
+    container:
+      image: docker.io/linuxserver/emby
+      nodeSelector: {}
+      port: 8096
+    service:
+      type: ClusterIP
+      port: 8096
+      nodePort:
+      extraLBService: false
+    ingress:
+      enabled: true
+      annotations: {}
+      path: /emby
+      tls:
+        enabled: false
+        secretName: ""
+    resources: {}
+    #  limits:
+    #    cpu: 100m
+    #    memory: 100Mi
+    #  requests:
+    #    cpu: 100m
+    #    memory: 100Mi
+    volume: {}
+    #  name: pvc-emby-config
+    #  storageClassName: longhorn
+    #  annotations: {}
+    #  labels: {}
+    #  accessModes: ReadWriteOnce
+    #  storage: 5Gi
+    #  selector: {}
+
+
   jellyfin:
     enabled: true
     container:
