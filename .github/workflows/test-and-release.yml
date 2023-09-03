@@ -88,8 +88,8 @@ jobs:
       - name: Edit hosts file and test apps
         run: |
           sudo echo "127.0.0.1   ${{ env.plex_ingress_host }} ${{ env.ingress_host }}" | sudo tee -a /etc/hosts
-          #TODO #wget ${{ env.ingress_host }}/bazarr
-          wget ${{ env.ingress_host }}/emby
+          #TODO Fix #wget ${{ env.ingress_host }}/bazarr
+          #TODO Fix #wget ${{ env.ingress_host }}/emby
           wget ${{ env.ingress_host }}/jackett
           wget ${{ env.ingress_host }}/jellyfin
           wget ${{ env.ingress_host }}/lidarr
