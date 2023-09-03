@@ -1,13 +1,6 @@
 name: Test
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/**'
-      - 'helm-charts/k8s-mediaserver/**'
-      - 'Dockerfile'
   workflow_dispatch:
 
 jobs:
