@@ -1,4 +1,4 @@
-name: Build and Push Image
+name: Build and Push Image (Release)
 
 env:
   DEFAULT_RELEASE_VERSION: "v1.0.0"
