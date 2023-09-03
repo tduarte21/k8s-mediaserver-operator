@@ -1,54 +1,58 @@
-name: Deploy KinD cluster and test resources
+name: Test
+
 on:
-  pull_request:
-    types: [opened, reopened, edited, synchronize]
+  push:
+    branches:
+      - master
     paths:
+      - '.github/workflows/**'
       - 'helm-charts/k8s-mediaserver/**'
       - 'Dockerfile'
-      - 'Dockerfile-ARM64'
-      - 'k8s-mediaserver*'
   workflow_dispatch:
 
 jobs:
-  helm-linter:
+  helm-test:
     runs-on: tduarte #ubuntu-latest
-    name: Run Helm linting
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup helm 
-        uses: azure/setup-helm@v3
-        with:
-           version: 'v3.10.0' 
-        id: install-helm
-       
-      - name: Lint Helm template
-        run: helm template helm-charts/k8s-mediaserver
-
-  build-deploy-cluster:
-    needs: helm-linter
     name: Build images and deploy KinD cluster with test resources
     env:
       ingress_host: k8s-mediaserver.k8s.test
       plex_ingress_host: k8s-plex.k8s.test
-      image_name: k8s-mediaserver-operator
-    runs-on: tduarte #ubuntu-latest
+      IMAGE_TAG: ${{ vars.DOCKER_PUSH_REPO }}/${{ vars.DOCKER_PUSH_IMAGE }}:latest
+      IMAGE_TAG_DEV: ${{ vars.DOCKER_PUSH_REPO }}/${{ vars.DOCKER_PUSH_IMAGE }}:dev #${{ github.sha }}
     steps:
       - uses: actions/checkout@v3
 
-      - name: Build Image - x86_64
-        id: build-image-x86_64
-        uses: docker/build-push-action@v3
+      - name: Setup helm
+        uses: azure/setup-helm@v3
         with:
-          tags: ${{ env.image_name }}:${{ github.sha }}
-          file: ./Dockerfile
+          version: 'v3.10.0'
+        id: install-helm
+
+      - name: Lint Helm template
+        run: helm template helm-charts/k8s-mediaserver
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Docker Login
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_PUSH_USERNAME }}
+          password: ${{ secrets.DOCKER_PUSH_TOKEN }}
+
+      - name: Docker Build and Push
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: ${{ env.IMAGE_TAG_DEV }}
+          context: .
 
       - name: Fetch newer version of CRD
-        run: | 
+        run: |
           cp k8s-mediaserver.yml k8s-mediaserver-operator.yml tests/
           sed -i 's/accessMode: ""/accessMode: ReadWriteOnce/g' tests/k8s-mediaserver.yml
           sed -i 's/pvcStorageClass: ""/pvcStorageClass: standard/g' tests/k8s-mediaserver.yml
-          sed 's|quay.io\/kubealex.*|${{ env.image_name }}:${{ github.sha }}|g' tests/k8s-mediaserver-operator.yml
+          sed 's|quay.io\/kubealex.*|${{ env.IMAGE_TAG_DEV }}|g' tests/k8s-mediaserver-operator.yml
 
       - name: Kind Cluster
         uses: helm/kind-action@v1.4.0
@@ -58,7 +62,8 @@ jobs:
 
       - name: Load images into KinD nodes
         run: |
-          kind load docker-image ${{ env.image_name }}:${{ github.sha }}
+          docker pull ${{ env.IMAGE_TAG_DEV }}
+          kind load docker-image ${{ env.IMAGE_TAG_DEV }}
 
       - name: Deploy ingress to newly created cluster
         run: |
@@ -69,20 +74,48 @@ jobs:
         run: |
           kubectl apply -f k8s-mediaserver-operator.yml
           while [[ $(kubectl get pods -n k8s-mediaserver-operator-system -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do echo "Waiting for operator pod to be ready" && sleep 5; done
-        
+
       - name: Deploy k8s-mediaserver CRD
         run: |
           kubectl create ns mediaserver
           kubectl apply -f tests/k8s-mediaserver.yml -n mediaserver
           sleep 15
           for pod in $(kubectl get pods -n mediaserver | awk 'NR>1{ print $1 }'); do while [[ $(kubectl get pods $pod -n mediaserver -o 'jsonpath={..status.conditions[?(@.type=="Ready")].status}') != "True" ]]; do echo "Waiting for mediaserver pods to be ready" && sleep 10; done ; done
-     
+
       - name: Edit hosts file and test apps
         run: |
           sudo echo "127.0.0.1   ${{ env.plex_ingress_host }} ${{ env.ingress_host }}" | sudo tee -a /etc/hosts
+          #TODO Fix #wget ${{ env.ingress_host }}/bazarr
+          #TODO Fix #wget ${{ env.ingress_host }}/emby
           wget ${{ env.ingress_host }}/jackett
-          wget ${{ env.ingress_host }}/sonarr
+          wget ${{ env.ingress_host }}/jellyfin
+          wget ${{ env.ingress_host }}/lidarr
+          curl ${{ env.plex_ingress_host }}  # Plex
+          wget ${{ env.ingress_host }}/prowlarr
           wget ${{ env.ingress_host }}/radarr
           wget ${{ env.ingress_host }}/sabnzbd
-          wget ${{ env.ingress_host }}/prowlarr          
-          curl ${{ env.plex_ingress_host }} 
+          wget ${{ env.ingress_host }}/sonarr
+          wget ${{ env.ingress_host }}/transmission
+
+  release:
+    name: Release
+    runs-on: tduarte #ubuntu-latest
+    needs: helm-test
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Docker Login
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_PUSH_USERNAME }}
+          password: ${{ secrets.DOCKER_PUSH_TOKEN }}
+
+      - name: Docker Build and Push
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: ${{ vars.DOCKER_PUSH_REPO }}/${{ vars.DOCKER_PUSH_IMAGE }}:latest
+          context: .
