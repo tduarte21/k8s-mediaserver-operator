@@ -104,10 +104,6 @@ jobs:
     name: Release
     runs-on: tduarte #ubuntu-latest
     needs: helm-test
-    outputs:
-      release_tag: ${{ steps.bump-version.outputs.new_tag || env.DEFAULT_RELEASE_VERSION }}
-      previous_tag: ${{ steps.bump-version.outputs.previous_tag || env.DEFAULT_RELEASE_VERSION }}
-
     steps:
       - uses: actions/checkout@v3
 
