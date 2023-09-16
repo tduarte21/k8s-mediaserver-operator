@@ -123,6 +123,35 @@ radarr:
     #storage: 5Gi
     #selector: {}
 
+radarrlow:
+  enabled: false
+  container:
+    image: docker.io/linuxserver/radarr
+    nodeSelector: {}
+    port: 7878
+  service:
+    type: ClusterIP
+    port: 7878
+    nodePort:
+    extraLBService: false
+    # Defines an additional LB service, requires cloud provider service or MetalLB
+  ingress:
+    enabled: true
+    annotations: {}
+    path: /radarrlow
+    tls:
+      enabled: false
+      secretName: ""
+  resources: {}
+  volume: {}
+    #name: pvc-radarrlow-config
+    #storageClassName: longhorn
+    #annotations: {}
+    #labels: {}
+    #accessModes: ReadWriteOnce
+    #storage: 5Gi
+  #selector: {}
+
 jackett:
   enabled: true
   container:
@@ -389,7 +418,7 @@ emby:
   #selector: {}
 
 overserr:
-  enabled: true
+  enabled: false
   container:
     image: sctx/overseerr
     tag: develop
