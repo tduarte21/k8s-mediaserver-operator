@@ -388,4 +388,31 @@ emby:
   #storage: 5Gi
   #selector: {}
 
-
+overserr:
+  enabled: true
+  container:
+    image: docker.io/linuxserver/overserr
+    nodeSelector: {}
+    port: 5055
+  service:
+    type: ClusterIP
+    port: 5055
+    nodePort:
+    extraLBService: false
+    # Defines an additional LB service, requires cloud provider service or MetalLB
+  ingress:
+    enabled: true
+    annotations: {}
+    path: /overserr
+    tls:
+      enabled: false
+      secretName: ""
+  resources: {}
+  volume: {}
+    #name: pvc-overserr-config
+    #storageClassName: longhorn
+    #annotations: {}
+    #labels: {}
+    #accessModes: ReadWriteOnce
+    #storage: 5Gi
+  #selector: {}
