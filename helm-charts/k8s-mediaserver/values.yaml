@@ -391,7 +391,8 @@ emby:
 overserr:
   enabled: true
   container:
-    image: docker.io/linuxserver/overserr
+    image: sctx/overseerr
+    tag: develop
     nodeSelector: {}
     port: 5055
   service:
