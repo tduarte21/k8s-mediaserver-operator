@@ -86,10 +86,10 @@ spec:
           volumeMounts:
           {{- if .Values.overserr.volume }}
             - name: {{ .Values.overserr.volume.name }}
-              mountPath: /config
+              mountPath: /app/config
           {{- else }}
             - name: mediaserver-volume
-              mountPath: "/config"
+              mountPath: "/app/config"
               subPath: "{{ .Values.general.storage.subPaths.config }}/overserr"
           {{- end }}
             - name: mediaserver-volume
