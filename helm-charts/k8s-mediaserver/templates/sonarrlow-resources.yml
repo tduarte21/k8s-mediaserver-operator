@@ -1,30 +1,29 @@
-{{ if .Values.radarrlow.enabled }}
+{{ if .Values.sonarrlow.enabled }}
 ---
 ### CONFIGMAP
 ## INIT-CONTAINER
----
 apiVersion: v1
 data:
   config.xml: |
     <Config>
-      <UrlBase>{{ .Values.radarrlow.ingress.path }}</UrlBase>
+      <UrlBase>{{ .Values.sonarrlow.ingress.path }}</UrlBase>
     </Config>
-  init-radarrlow.sh: |
+  init-sonarrlow.sh: |
     #!/bin/bash
     echo "### Initializing config ###"
-    if [ ! -f /radarrlow-config/config.xml ]; then
-      cp -n /init-radarrlow/config.xml /radarrlow-config/config.xml
+    if [ ! -f /sonarrlow-config/config.xml ]; then
+      cp -n /init-sonarrlow/config.xml /sonarrlow-config/config.xml
       echo "### No configuration found, intialized with default settings ###"
     fi
 kind: ConfigMap
 metadata:
-  name: init-radarrlow-cm
+  name: init-sonarrlow-cm
 ---
 ## APPLICATION
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: radarrlow-config
+  name: sonarrlow-config
 data:
   PGID: "{{ .Values.general.pgid }}"
   PUID: "{{ .Values.general.puid }}"
@@ -33,7 +32,7 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: radarrlow
+  name: sonarrlow
   labels:
     {{- include "k8s-mediaserver.labels" . | nindent 4 }}
 spec:
@@ -47,22 +46,22 @@ spec:
     metadata:
       labels:
         {{- include "k8s-mediaserver.selectorLabels" . | nindent 8 }}
-        app: radarrlow
+        app: sonarrlow
     spec:
       initContainers:
-        - name: config-radarrlow
+        - name: config-sonarrlow
           image: docker.io/ubuntu:groovy
-          command: ["/init-radarrlow/init-radarrlow.sh"]
+          command: ["/init-sonarrlow/init-sonarrlow.sh"]
           volumeMounts:
-            - mountPath: /init-radarrlow
-              name: init-files-radarrlow
-          {{- if .Values.radarrlow.volume }}
-            - name: {{ .Values.radarrlow.volume.name }}
-              mountPath: /radarrlow-config
+            - mountPath: /init-sonarrlow
+              name: init-files-sonarrlow
+          {{- if .Values.sonarrlow.volume }}
+            - name: {{ .Values.sonarrlow.volume.name }}
+              mountPath: /sonarrlow-config
           {{- else }}
             - name: mediaserver-volume
-              mountPath: /radarrlow-config
-              subPath: "{{ .Values.general.storage.subPaths.config }}/radarrlow"
+              mountPath: /sonarrlow-config
+              subPath: "{{ .Values.general.storage.subPaths.config }}/sonarrlow"
           {{- end }}
           securityContext:
             runAsUser: {{ .Values.general.puid }}
@@ -71,34 +70,34 @@ spec:
         - name: {{ .Chart.Name }}
           envFrom:
             - configMapRef:
-                name: radarrlow-config
-          image: "{{ .Values.radarrlow.container.image }}:{{ .Values.radarrlow.container.tag | default .Values.general.image_tag }}"
+                name: sonarrlow-config
+          image: "{{ .Values.sonarrlow.container.image }}:{{ .Values.sonarrlow.container.tag | default .Values.general.image_tag }}"
           imagePullPolicy: Always
           readinessProbe:
             tcpSocket:
-              port: {{ .Values.radarrlow.container.port }}
+              port: {{ .Values.sonarrlow.container.port }}
             initialDelaySeconds: 10
             periodSeconds: 20
           ports:
-            - name: radarrlow-port
-              containerPort: {{ .Values.radarrlow.container.port }}
+            - name: sonarrlow-port
+              containerPort: {{ .Values.sonarrlow.container.port }}
               protocol: TCP
           volumeMounts:
-          {{- if .Values.radarrlow.volume }}
-            - name: {{ .Values.radarrlow.volume.name }}
+          {{- if .Values.sonarrlow.volume }}
+            - name: {{ .Values.sonarrlow.volume.name }}
               mountPath: /config
           {{- else }}
             - name: mediaserver-volume
               mountPath: "/config"
-              subPath: "{{ .Values.general.storage.subPaths.config }}/radarrlow"
+              subPath: "{{ .Values.general.storage.subPaths.config }}/sonarrlow"
           {{- end }}
             - name: mediaserver-volume
               mountPath: "/downloads"
               subPath: "{{ .Values.general.storage.subPaths.downloads }}"
             - name: mediaserver-volume
-              mountPath: "/movies"
-              subPath: "{{ .Values.general.storage.subPaths.movieslow }}"
-          {{- with .Values.radarrlow.resources }}
+              mountPath: "/tv"
+              subPath: "{{ .Values.general.storage.subPaths.tvlow }}"
+          {{- with .Values.sonarrlow.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -111,15 +110,15 @@ spec:
         - name: mediaserver-volume
           {{- toYaml .Values.general.storage.volumes | nindent 10 }}
         {{- end }}
-        {{- if .Values.radarrlow.volume }}
-        - name: {{ .Values.radarrlow.volume.name }}
+        {{- if .Values.sonarrlow.volume }}
+        - name: {{ .Values.sonarrlow.volume.name }}
           persistentVolumeClaim:
-            claimName: {{ .Values.radarrlow.volume.name }}
+            claimName: {{ .Values.sonarrlow.volume.name }}
         {{- end }}
-        - name: init-files-radarrlow
+        - name: init-files-sonarrlow
           configMap:
             defaultMode: 493
-            name: init-radarrlow-cm
+            name: init-sonarrlow-cm
       {{- with .Values.general.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -129,73 +128,72 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: radarrlow
+  name: sonarrlow
   labels:
     {{- include "k8s-mediaserver.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.radarrlow.service.type }}
+  type: {{ .Values.sonarrlow.service.type }}
   ports:
-    - port: {{ .Values.radarrlow.service.port }}
-      targetPort: {{ .Values.radarrlow.container.port }}
+    - port: {{ .Values.sonarrlow.service.port }}
+      targetPort: {{ .Values.sonarrlow.container.port }}
       protocol: TCP
-{{ if eq .Values.radarrlow.service.type "NodePort" }}
-      nodePort: {{ .Values.radarrlow.service.nodePort }}
+{{ if eq .Values.sonarrlow.service.type "NodePort" }}
+      nodePort: {{ .Values.sonarrlow.service.nodePort }}
 {{ end }}
-      name: radarrlow-port
+      name: sonarrlow-port
   selector:
-    app: radarrlow
-
+    app: sonarrlow
 ---
-{{ if .Values.radarrlow.service.extraLBService }}
+{{ if .Values.sonarrlow.service.extraLBService }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: radarrlow-lb
+  name: sonarrlow-lb
   annotations:
-    {{- include .Values.radarrlow.service.extraLBService.annotations . | nindent 4 }}
+    {{- include .Values.sonarrlow.service.extraLBService.annotations . | nindent 4 }}
   labels:
     {{- include "k8s-mediaserver.labels" . | nindent 4 }}
 spec:
   type: LoadBalancer
   ports:
-    - port: {{ .Values.radarrlow.service.port }}
-      targetPort: {{ .Values.radarrlow.container.port }}
+    - port: {{ .Values.sonarrlow.service.port }}
+      targetPort: {{ .Values.sonarrlow.container.port }}
       protocol: TCP
-      name: radarrlow-port
+      name: sonarrlow-port
   selector:
-    app: radarrlow
+    app: sonarrlow
 {{ end }}
 ---
-### INGRESS ###
-{{ if .Values.radarrlow.ingress.enabled }}
+### INGRESS
+{{ if .Values.sonarrlow.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: radarrlow
+  name: sonarrlow
   labels:
     {{- include "k8s-mediaserver.labels" . | nindent 4 }}
-  {{- with .Values.radarrlow.ingress.annotations }}
+  {{- with .Values.sonarrlow.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-{{- if .Values.radarrlow.ingress.tls.enabled }}
+{{- if .Values.sonarrlow.ingress.tls.enabled }}
   tls:
     - hosts:
         - {{ .Values.general.ingress_host | quote }}
-      secretName: {{ .Values.radarrlow.ingress.tls.secretName }}
+      secretName: {{ .Values.sonarrlow.ingress.tls.secretName }}
 {{ end }}
   ingressClassName: {{ .Values.general.ingress.ingressClassName }}
   rules:
     - host: {{ .Values.general.ingress_host | quote }}
       http:
         paths:
-          - path: {{ .Values.radarrlow.ingress.path }}
+          - path: {{ .Values.sonarrlow.ingress.path }}
             pathType: Prefix
             backend:
               service:
-                name: radarrlow
+                name: sonarrlow
                 port:
-                  number: {{ .Values.radarrlow.service.port }}
+                  number: {{ .Values.sonarrlow.service.port }}
 {{ end }}
 {{ end }}

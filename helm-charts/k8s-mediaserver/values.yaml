@@ -20,7 +20,9 @@ general:
     # the path starting from the top level of the pv you're passing. If your share is server.local/share/, then tv is server.local/share/media/tv
     subPaths:
       tv: media/tv
+      tvlow: media/tvlow
       movies: media/movies
+      movieslow: media/movieslow
       music: media/music
       downloads: downloads
       transmission: transmission
@@ -63,6 +65,37 @@ sonarr:
     #storage: 5Gi
     #selector: {}
 
+sonarrlow:
+  enabled: true
+  container:
+    image: docker.io/linuxserver/sonarr
+    nodeSelector: {}
+    port: 8989
+  service:
+    type: ClusterIP
+    port: 8989
+    nodePort:
+    extraLBService: false
+    # Defines an additional LB service, requires cloud provider service or MetalLB
+  ingress:
+    enabled: true
+    annotations: {}
+    path: /sonarrlow
+    tls:
+      enabled: false
+      secretName: ""
+  resources: {}
+  volume: {}
+    #name: pvc-sonarrlow-config
+    #storageClassName: longhorn
+    #annotations:
+    #  my-annotation/test: my-value
+    #labels:
+    #  my-label/test: my-other-value
+    #accessModes: ReadWriteOnce
+    #storage: 5Gi
+    #selector: {}
+
 lidarr:
   enabled: true
   container:
@@ -84,7 +117,7 @@ lidarr:
       secretName: ""
   resources: {}
   volume: {}
-    #name: pvc-sonarr-config
+    #name: pvc-lidarr-config
     #storageClassName: longhorn
     #annotations:
     #  my-annotation/test: my-value
@@ -255,7 +288,7 @@ sabnzbd:
       secretName: ""
   resources: {}
   volume: {}
-  #  name: pvc-plex-config
+  #  name: pvc-sabnzbd-config
   #  storageClassName: longhorn
   #  annotations: {}
   #  labels: {}
