@@ -66,7 +66,7 @@ sonarr:
     #selector: {}
 
 sonarrlow:
-  enabled: true
+  enabled: false
   container:
     image: docker.io/linuxserver/sonarr
     nodeSelector: {}
