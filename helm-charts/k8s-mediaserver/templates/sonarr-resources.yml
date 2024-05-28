@@ -164,7 +164,7 @@ spec:
     app: sonarr
 {{ end }}
 ---
-### INGRESS
+### INGRESS ###
 {{ if .Values.sonarr.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress

@@ -1,30 +1,29 @@
-{{ if .Values.overserr.enabled }}
+{{ if .Values.overseerr.enabled }}
 ---
 ### CONFIGMAP
 ## INIT-CONTAINER
----
 apiVersion: v1
 data:
   config.xml: |
     <Config>
-      <UrlBase>{{ .Values.overserr.ingress.path }}</UrlBase>
+      <UrlBase>{{ .Values.overseerr.ingress.path }}</UrlBase>
     </Config>
-  init-overserr.sh: |
+  init-overseerr.sh: |
     #!/bin/bash
     echo "### Initializing config ###"
-    if [ ! -f /overserr-config/config.xml ]; then
-      cp -n /init-overserr/config.xml /overserr-config/config.xml
+    if [ ! -f /overseerr-config/config.xml ]; then
+      cp -n /init-overseerr/config.xml /overseerr-config/config.xml
       echo "### No configuration found, intialized with default settings ###"
     fi
 kind: ConfigMap
 metadata:
-  name: init-overserr-cm
+  name: init-overseerr-cm
 ---
 ## APPLICATION
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: overserr-config
+  name: overseerr-config
 data:
   PGID: "{{ .Values.general.pgid }}"
   PUID: "{{ .Values.general.puid }}"
@@ -33,7 +32,7 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: overserr
+  name: overseerr
   labels:
     {{- include "k8s-mediaserver.labels" . | nindent 4 }}
 spec:
@@ -47,22 +46,22 @@ spec:
     metadata:
       labels:
         {{- include "k8s-mediaserver.selectorLabels" . | nindent 8 }}
-        app: overserr
+        app: overseerr
     spec:
       initContainers:
-        - name: config-overserr
+        - name: config-overseerr
           image: docker.io/ubuntu:groovy
-          command: ["/init-overserr/init-overserr.sh"]
+          command: ["/init-overseerr/init-overseerr.sh"]
           volumeMounts:
-            - mountPath: /init-overserr
-              name: init-files-overserr
-          {{- if .Values.overserr.volume }}
-            - name: {{ .Values.overserr.volume.name }}
-              mountPath: /overserr-config
+            - mountPath: /init-overseerr
+              name: init-files-overseerr
+          {{- if .Values.overseerr.volume }}
+            - name: {{ .Values.overseerr.volume.name }}
+              mountPath: /overseerr-config
           {{- else }}
             - name: mediaserver-volume
-              mountPath: /overserr-config
-              subPath: "{{ .Values.general.storage.subPaths.config }}/overserr"
+              mountPath: /overseerr-config
+              subPath: "{{ .Values.general.storage.subPaths.config }}/overseerr"
           {{- end }}
           securityContext:
             runAsUser: {{ .Values.general.puid }}
@@ -71,26 +70,26 @@ spec:
         - name: {{ .Chart.Name }}
           envFrom:
             - configMapRef:
-                name: overserr-config
-          image: "{{ .Values.overserr.container.image }}:{{ .Values.overserr.container.tag | default .Values.general.image_tag }}"
+                name: overseerr-config
+          image: "{{ .Values.overseerr.container.image }}:{{ .Values.overseerr.container.tag | default .Values.general.image_tag }}"
           imagePullPolicy: Always
           readinessProbe:
             tcpSocket:
-              port: {{ .Values.overserr.container.port }}
+              port: {{ .Values.overseerr.container.port }}
             initialDelaySeconds: 10
             periodSeconds: 20
           ports:
-            - name: overserr-port
-              containerPort: {{ .Values.overserr.container.port }}
+            - name: overseerr-port
+              containerPort: {{ .Values.overseerr.container.port }}
               protocol: TCP
           volumeMounts:
-          {{- if .Values.overserr.volume }}
-            - name: {{ .Values.overserr.volume.name }}
+          {{- if .Values.overseerr.volume }}
+            - name: {{ .Values.overseerr.volume.name }}
               mountPath: /app/config
           {{- else }}
             - name: mediaserver-volume
               mountPath: "/app/config"
-              subPath: "{{ .Values.general.storage.subPaths.config }}/overserr"
+              subPath: "{{ .Values.general.storage.subPaths.config }}/overseerr"
           {{- end }}
             - name: mediaserver-volume
               mountPath: "/downloads"
@@ -98,7 +97,10 @@ spec:
             - name: mediaserver-volume
               mountPath: "/movies"
               subPath: "{{ .Values.general.storage.subPaths.movies }}"
-          {{- with .Values.overserr.resources }}
+            - name: mediaserver-volume
+              mountPath: "/tv"
+              subPath: "{{ .Values.general.storage.subPaths.tv }}"
+          {{- with .Values.overseerr.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -111,15 +113,15 @@ spec:
         - name: mediaserver-volume
           {{- toYaml .Values.general.storage.volumes | nindent 10 }}
         {{- end }}
-        {{- if .Values.overserr.volume }}
-        - name: {{ .Values.overserr.volume.name }}
+        {{- if .Values.overseerr.volume }}
+        - name: {{ .Values.overseerr.volume.name }}
           persistentVolumeClaim:
-            claimName: {{ .Values.overserr.volume.name }}
+            claimName: {{ .Values.overseerr.volume.name }}
         {{- end }}
-        - name: init-files-overserr
+        - name: init-files-overseerr
           configMap:
             defaultMode: 493
-            name: init-overserr-cm
+            name: init-overseerr-cm
       {{- with .Values.general.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -129,73 +131,72 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: overserr
+  name: overseerr
   labels:
     {{- include "k8s-mediaserver.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.overserr.service.type }}
+  type: {{ .Values.overseerr.service.type }}
   ports:
-    - port: {{ .Values.overserr.service.port }}
-      targetPort: {{ .Values.overserr.container.port }}
+    - port: {{ .Values.overseerr.service.port }}
+      targetPort: {{ .Values.overseerr.container.port }}
       protocol: TCP
-{{ if eq .Values.overserr.service.type "NodePort" }}
-      nodePort: {{ .Values.overserr.service.nodePort }}
+{{ if eq .Values.overseerr.service.type "NodePort" }}
+      nodePort: {{ .Values.overseerr.service.nodePort }}
 {{ end }}
-      name: overserr-port
+      name: overseerr-port
   selector:
-    app: overserr
-
+    app: overseerr
 ---
-{{ if .Values.overserr.service.extraLBService }}
+{{ if .Values.overseerr.service.extraLBService }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: overserr-lb
+  name: overseerr-lb
   annotations:
-    {{- include .Values.overserr.service.extraLBService.annotations . | nindent 4 }}
+    {{- include .Values.overseerr.service.extraLBService.annotations . | nindent 4 }}
   labels:
     {{- include "k8s-mediaserver.labels" . | nindent 4 }}
 spec:
   type: LoadBalancer
   ports:
-    - port: {{ .Values.overserr.service.port }}
-      targetPort: {{ .Values.overserr.container.port }}
+    - port: {{ .Values.overseerr.service.port }}
+      targetPort: {{ .Values.overseerr.container.port }}
       protocol: TCP
-      name: overserr-port
+      name: overseerr-port
   selector:
-    app: overserr
+    app: overseerr
 {{ end }}
 ---
 ### INGRESS ###
-{{ if .Values.overserr.ingress.enabled }}
+{{ if .Values.overseerr.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: overserr
+  name: overseerr
   labels:
     {{- include "k8s-mediaserver.labels" . | nindent 4 }}
-  {{- with .Values.overserr.ingress.annotations }}
+  {{- with .Values.overseerr.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-{{- if .Values.overserr.ingress.tls.enabled }}
+{{- if .Values.overseerr.ingress.tls.enabled }}
   tls:
     - hosts:
         - {{ .Values.general.ingress_host | quote }}
-      secretName: {{ .Values.overserr.ingress.tls.secretName }}
+      secretName: {{ .Values.overseerr.ingress.tls.secretName }}
 {{ end }}
   ingressClassName: {{ .Values.general.ingress.ingressClassName }}
   rules:
     - host: {{ .Values.general.ingress_host | quote }}
       http:
         paths:
-          - path: {{ .Values.overserr.ingress.path }}
+          - path: {{ .Values.overseerr.ingress.path }}
             pathType: Prefix
             backend:
               service:
-                name: overserr
+                name: overseerr
                 port:
-                  number: {{ .Values.overserr.service.port }}
+                  number: {{ .Values.overseerr.service.port }}
 {{ end }}
 {{ end }}
