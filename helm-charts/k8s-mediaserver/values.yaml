@@ -450,7 +450,7 @@ emby:
   #storage: 5Gi
   #selector: {}
 
-overserr:
+overseerr:
   enabled: false
   container:
     image: sctx/overseerr
@@ -466,13 +466,13 @@ overserr:
   ingress:
     enabled: true
     annotations: {}
-    path: /overserr
+    path: /overseerr
     tls:
       enabled: false
       secretName: ""
   resources: {}
   volume: {}
-    #name: pvc-overserr-config
+    #name: pvc-overseerr-config
     #storageClassName: longhorn
     #annotations: {}
     #labels: {}
