@@ -24,6 +24,7 @@ general:
       movies: media/movies
       movieslow: media/movieslow
       music: media/music
+      ebooks: media/ebooks
       downloads: downloads
       transmission: transmission
       sabnzbd: sabnzbd
@@ -118,6 +119,39 @@ lidarr:
   resources: {}
   volume: {}
     #name: pvc-lidarr-config
+    #storageClassName: longhorn
+    #annotations:
+    #  my-annotation/test: my-value
+    #labels:
+    #  my-label/test: my-other-value
+    #accessModes: ReadWriteOnce
+    #storage: 5Gi
+  #selector: {}
+
+kavita:
+  enabled: true
+  container:
+    image: docker.io/linuxserver/kavita
+    nodeSelector: {}
+    port: 5000
+#    runAsUser: 1000 #UID to run the process with
+#    runAsGroup: 1000 #GID to run the process with
+  service:
+    type: ClusterIP
+    port: 5000
+    nodePort:
+    extraLBService: false
+    # Defines an additional LB service, requires cloud provider service or MetalLB
+  ingress:
+    enabled: true
+    annotations: {}
+    path: /kavita
+    tls:
+      enabled: false
+      secretName: ""
+  resources: {}
+  volume: {}
+    #name: pvc-kavita-config
     #storageClassName: longhorn
     #annotations:
     #  my-annotation/test: my-value
