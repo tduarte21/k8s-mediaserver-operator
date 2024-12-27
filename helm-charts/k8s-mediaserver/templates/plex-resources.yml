@@ -74,8 +74,14 @@ spec:
               mountPath: /movies
               subPath: "{{ .Values.general.storage.subPaths.movies }}"
             - name: mediaserver-volume
+              mountPath: /movieslow
+              subPath: "{{ .Values.general.storage.subPaths.movieslow }}"
+            - name: mediaserver-volume
               mountPath: /tv
               subPath: "{{ .Values.general.storage.subPaths.tv }}"
+            - name: mediaserver-volume
+              mountPath: /tvlow
+              subPath: "{{ .Values.general.storage.subPaths.tvlow }}"
             - name: mediaserver-volume
               mountPath: /music
               subPath: "{{ .Values.general.storage.subPaths.music }}"
