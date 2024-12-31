@@ -424,6 +424,34 @@ bazarr:
     #storage: 5Gi
   #selector: {}
 
+bazarrlow:
+  enabled: true
+  container:
+    image: docker.io/linuxserver/bazarr
+    nodeSelector: {}
+    port: 6767
+  service:
+    type: ClusterIP
+    port: 6767
+    nodePort:
+    extraLBService: false
+    # Defines an additional LB service, requires cloud provider service or MetalLB
+  ingress:
+    enabled: true
+    annotations: {}
+    path: /bazarrlow
+    tls:
+      enabled: false
+      secretName: ""
+  resources: {}
+  volume: {}
+    #name: pvc-bazarrlow-config
+    #storageClassName: longhorn
+    #annotations: {}
+    #labels: {}
+    #accessModes: ReadWriteOnce
+    #storage: 5Gi
+  #selector: {}
 
 jellyfin:
   enabled: true
