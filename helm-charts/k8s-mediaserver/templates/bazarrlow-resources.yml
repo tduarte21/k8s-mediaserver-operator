@@ -97,10 +97,10 @@ spec:
               subPath: "{{ .Values.general.storage.subPaths.downloads }}"
             - name: mediaserver-volume
               mountPath: "/movies"
-              subPath: "{{ .Values.general.storage.subPaths.movies }}"
+              subPath: "{{ .Values.general.storage.subPaths.movieslow }}"
             - name: mediaserver-volume
               mountPath: "/tv"
-              subPath: "{{ .Values.general.storage.subPaths.tv }}"
+              subPath: "{{ .Values.general.storage.subPaths.tvlow }}"
           {{- with .Values.bazarrlow.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
